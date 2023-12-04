@@ -1,3 +1,5 @@
+import math as m
+
 def get_cardval(w, p):
 
     nmatch = 0
@@ -18,7 +20,6 @@ def get_lines(fname):
     lines = [line.strip() for line in lines]
     return lines
 
-cards = get_lines('input.txt')
 
 
 def get_ws(cards):
@@ -46,6 +47,9 @@ def get_ps(cards):
     Ws = [w for w in Ws if len(w) > 0]
     return Ws
 
+#cards = get_lines('input.txt')
+cards = get_lines('input_test.txt')
+
 Ws = get_ws(cards)
 Ps = get_ps(cards)
 
@@ -53,10 +57,13 @@ Ps = get_ps(cards)
 total = 0
 i = 1
 for w,p in zip(Ws,Ps):
-    n, cardval = get_cardval(w,p)
+    n2 = [a for a in p if a in w]
+    n2 = len(n2)
+    #n, cardval = get_cardval(w,p)
+    c2 = m.floor(2**(n2-1))
                 
-    total += cardval
-    print(f'i: {i:3d} n: {n:2d} cardval: {cardval}')
+    total += c2
+    print(f'i: {i:3d} n: {n2:2d} cardval: {c2}')
     i += 1
 
 print(f'total = {total}')
