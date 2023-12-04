@@ -1,3 +1,5 @@
+import time
+
 def get_cardval(w, p):
 
     nmatch = 0
@@ -71,9 +73,15 @@ def get_card_scratchers(card, card_list, inscratchers):
 lines = get_lines('input.txt')
 C = get_ws(lines)
     
+
+tic = time.perf_counter()
+
 scratchers = []
 for c in C:
     get_card_scratchers(c, C, scratchers)
 
+toc = time.perf_counter()
+
 ns = len(scratchers)
 print(f'num scratchers: {ns}')
+print(f'time = {toc - tic:10.1f} seconds')
