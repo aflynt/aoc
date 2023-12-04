@@ -21,7 +21,7 @@ def get_lines(fname):
     return lines
 
 def get_ws(cards):
-    C = []
+    C = {}
 
     # Card 1: w1 w2 ... | p1 p2 ...
     for card in cards:
@@ -36,52 +36,38 @@ def get_ws(cards):
         pnums = pstrs.strip().split(' ')
         wnums = [w for w in wnums if len(w)>0]
         pnums = [p for p in pnums if len(p)>0]
-        n,v = get_cardval(wnums, pnums)
-        C.append((cardnum, n, v))
+        n,_ = get_cardval(wnums, pnums)
+        C[cardnum] = n
 
     return C
 
-def retrieve_card(card_list, i):
-    card = (0,0,0)
-    # card = (num, nwins, val)
-    for card in card_list:
-        num, nwins, val = card
-        if num == i:
-            return card
-    return card
-
-def get_card_scratchers(card, card_list, inscratchers):
-
-    card_num, card_wins, _ = card
-
-    # add card to inscratchers
-    inscratchers.append(card_num)
-
-    # get list of cards that this card won us
-    copy_cards = list(range(card_num+1,card_num+card_wins+1))
-    copy_cards = [ retrieve_card(card_list,i) for i in copy_cards]
-
-    if len(copy_cards) == 0:
-        return inscratchers
-    else:
-        # get the copy cards scratchers
-        for cpc in copy_cards:
-            get_card_scratchers(cpc, card_list, inscratchers)
-            
-        return inscratchers
 
 lines = get_lines('input.txt')
 C = get_ws(lines)
+
+def get_card_scratchers(card_num, card_wins, ns ):
+
+    # add card to inscratchers
+    ns += 1
+
+    if card_wins:
+        card_num += 1
+        for icard_num in range(card_num, card_num+card_wins):
+            ns = get_card_scratchers(icard_num, C[icard_num], ns)
+            
+    return ns
+
     
 
 tic = time.perf_counter()
 
-scratchers = []
-for c in C:
-    get_card_scratchers(c, C, scratchers)
+ns = 0
+for card_num, card_wins in C.items():
+    if card_wins:
+        ns = get_card_scratchers(card_num, card_wins, ns)
 
 toc = time.perf_counter()
 
-ns = len(scratchers)
+#ns = inscratchers
 print(f'num scratchers: {ns}')
 print(f'time = {toc - tic:10.1f} seconds')
