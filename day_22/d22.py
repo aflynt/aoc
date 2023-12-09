@@ -1,74 +1,59 @@
+from collections import deque
+from lib import *
+
+#fname = 'ex.dat'
+fname = 'input.dat'
+
+lines = get_input(fname)
+
+path  = lines[-1].strip('\n')
+board = [ line.strip('\n') for line in lines[:-2] ]
+grid = mk_grid(board)
 
 
-class Expr:
-    pass
+posR, posC = find_initial_positon(board)
+steps, rotations = parse_steps(path)
+rotations = deque(rotations)
+facing = 'E'
+
+limits = get_grid_limits(grid)
 
 
-class BinaryOp(Expr):
-    def __init__(self, left, right, opchar='+') -> None:
-        self.m_l = left
-        self.m_r = right
-        self.m_opchar = opchar
-        super().__init__()
+for step in steps:
 
-    def str_helper(self):
-        return '(' + str(self.m_l) + self.m_opchar + str(self.m_r) + ')'
+    for i in range(step):
 
-    def __str__(self) -> str:
-        return self.str_helper()
+        newR, newC = step_fwd(facing, posR, posC, limits)
 
-    def eval(self, context):
-
-        if self.m_opchar == '*':
-            return self.m_l.eval(context) * self.m_r.eval(context)
+        newChar = grid[newR][newC]
+        if newChar == '#':
+            break
         else:
-            return self.m_l.eval(context) + self.m_r.eval(context)
+            #print(f'{i+1}/{step} steps  r,c,f: {newR},{newC},{facing}')
+            posR, posC = newR, newC
+
+        #print_board(grid, posR, posC)
+        #write_board('o.dat', grid, posR, posC)
+
+        #_ = input('?')
+    facing = rotate(facing, rotations)
+    #print(f'rotate face: {facing}')
+
+face_val = 3
+if facing == 'E':
+    face_val = 0
+elif facing == 'S':
+    face_val = 1
+elif facing == 'W':
+    face_val = 2
+
+print(f'final facing = {facing}, face_val = {face_val}')
+print(f'final rowval = {posR+1}, row_val  = {1000*(posR+1)}')
+print(f'final colval = {posC+1}, row_val  = {   4*(posC+1)}')
+
+pss = face_val + 1000*(posR+1) + 4*(posC+1)
+print(f'pss = {pss}')
 
 
-class Multipy(BinaryOp):
-    def __init__(self, left, right) -> None:
-        super().__init__(left, right, '*')
-
-
-class Add(BinaryOp):
-    def __init__(self, left, right) -> None:
-        super().__init__(left, right, '+')
-
-
-class Var(Expr):
-    def __init__(self, name) -> None:
-        self.m_name = name
-        super().__init__()
-
-    def __str__(self) -> str:
-        return self.m_name
-
-    def eval(self, context):
-        return context[self.m_name]
-
-
-class Const(Expr):
-    def __init__(self, value) -> None:
-        self.m_value = value
-
-    def __str__(self):
-        return str(self.m_value)
-
-    def eval(self, _):
-        return self.m_value
-
-
-e1 = Multipy(Var('x'), Add(Const(2), Var('y')))
-e2 = Add(Multipy(Var('x'), Const(2)), Var('y'))
-
-ctx = {
-        'x': 3,
-        'y': 4,
-}
-
-print(f'{e1}: { e1.eval(ctx)}')
-print(f'{e2}: { e2.eval(ctx)}')
-
-
-
-
+'''
+'''
