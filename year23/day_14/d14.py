@@ -89,22 +89,21 @@ def cycle_1(G, R, C):
     G = shift_e(G, R, C)
     return G
 
-    
-#lstr = open("ex_post.txt").read()
-#lstr = open("ex.txt").read()
-lstr = open("in.txt").read()
-lines = lstr.splitlines()
-
-R = len(lines)
-C = len(lines[0])
-G = get_grid(lines)
-
 def part_1(G, R, C):
 
     G = shift_n(G, R, C)
     
     load = get_load(G)
     print(f"load: {load}")
+    
+lstr = open("ex.txt").read()
+#lstr = open("in.txt").read()
+lines = lstr.splitlines()
+
+R = len(lines)
+C = len(lines[0])
+G = get_grid(lines)
+
 
 #N = 1000000000
 #for i in range(N):
