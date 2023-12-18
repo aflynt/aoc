@@ -100,7 +100,7 @@ def pick_mv():
     x = input("dir: (0N, 1S, 2E, 3W)")
     return int(x)
 
-def get_node_nbrs(G, cn: Node) -> list[Node]:
+def get_node_nbrs_min_max(G, cn: Node, dmin=4, dmax=10) -> list[Node]:
     R   = len(G)
     C   = len(G[0])
     r = cn.r
@@ -109,32 +109,32 @@ def get_node_nbrs(G, cn: Node) -> list[Node]:
     dir = cn.dir
     nbrs = []
     if dir == Dir.E:
-        if 0 <= r-1 < R and 0 <= c   < C:
+        if 0 <= r-1 < R and 0 <= c   < C and mvs >= dmin:
             nbrs.append(Node(r-1, c  , 1, Dir.N)) 
-        if 0 <= r+1 < R and 0 <= c   < C:
+        if 0 <= r+1 < R and 0 <= c   < C and mvs >= dmin:
             nbrs.append(Node(r+1, c  , 1, Dir.S)) 
-        if 0 <= r   < R and 0 <= c+1 < C and mvs < 3:
+        if 0 <= r   < R and 0 <= c+1 < C and mvs < dmax:
             nbrs.append(Node(r  , c+1, mvs+1, Dir.E)) 
     elif dir == Dir.W:
-        if 0 <= r-1 < R and 0 <= c   < C:
+        if 0 <= r-1 < R and 0 <= c   < C and mvs >= dmin:
             nbrs.append(Node( r-1, c, 1, Dir.N)) 
-        if 0 <= r+1 < R and 0 <= c   < C:
+        if 0 <= r+1 < R and 0 <= c   < C and mvs >= dmin:
             nbrs.append(Node( r+1, c, 1, Dir.S)) 
-        if 0 <= r   < R and 0 <= c-1 < C and mvs < 3:
+        if 0 <= r   < R and 0 <= c-1 < C and mvs < dmax:
             nbrs.append(Node( r, c-1, mvs+1, Dir.W)) 
     elif dir == Dir.N:
-        if 0 <= r   < R and 0 <= c+1 < C:
+        if 0 <= r   < R and 0 <= c+1 < C and mvs >= dmin:
             nbrs.append(Node( r, c+1, 1, Dir.E)) 
-        if 0 <= r   < R and 0 <= c-1 < C:
+        if 0 <= r   < R and 0 <= c-1 < C and mvs >= dmin:
             nbrs.append(Node( r, c-1, 1, Dir.W)) 
-        if 0 <= r-1 < R and 0 <= c   < C and mvs < 3:
+        if 0 <= r-1 < R and 0 <= c   < C and mvs < dmax:
             nbrs.append(Node( r-1, c, mvs+1, Dir.N)) 
     elif dir == Dir.S:
-        if 0 <= r   < R and 0 <= c+1 < C:
+        if 0 <= r   < R and 0 <= c+1 < C and mvs >= dmin:
             nbrs.append(Node( r, c+1, 1, Dir.E)) 
-        if 0 <= r   < R and 0 <= c-1 < C:
+        if 0 <= r   < R and 0 <= c-1 < C and mvs >= dmin:
             nbrs.append(Node( r, c-1, 1, Dir.W)) 
-        if 0 <= r+1 < R and 0 <= c   < C and mvs < 3:
+        if 0 <= r+1 < R and 0 <= c   < C and mvs < dmax:
             nbrs.append(Node( r+1, c, mvs+1, Dir.S)) 
     else:
         assert False
@@ -157,21 +157,21 @@ def h(node: Node, goal: Node):
     return dx
 
 
-def init_gscore(R,C):
+def init_gscore(R,C, nfwd=3):
     gScore = {} # defaults = infinity??
     for r in range(R):
         for c in range(C):
-            for mv in [1, 2, 3]:
+            for mv in range(1,nfwd+1):
                 for dir in [Dir.N, Dir.S, Dir.E, Dir.W]:
                     n = Node(r,c,mv,dir)
                     gScore[n] = sys.maxsize
     return gScore
 
-def init_fscore(R,C):
+def init_fscore(R,C, nfwd=3):
     fScore = {} # defaults = infinity??
     for r in range(R):
         for c in range(C):
-            for mv in [1, 2, 3]:
+            for mv in range(1,nfwd+1):
                 for dir in [Dir.N, Dir.S, Dir.E, Dir.W]:
                     n = Node(r,c,mv,dir)
                     fScore[n] = sys.maxsize
