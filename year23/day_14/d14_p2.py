@@ -15,7 +15,6 @@ def get_balls(lines):
             if char == "O":
                 bs.append((r,c))
     bs = tuple(sorted(bs))
-
     return bs
 
 def get_walls(lines):
@@ -38,9 +37,24 @@ def get_ball_load(brs: list[int]) -> int:
         load += R - r
     return load
 
+def get_list(bs ):
+    return list(bs)
 
-@cache
-def shift_balls_n(bs: tuple[tuple[int,int]]) -> tuple[tuple[int,int]]:
+def get_tuple(bs):
+    return tuple(sorted(bs))
+
+def is_free_of_bs(r,c, bs):
+    return (r,c) not in bs
+
+def is_free_of_ws(r,c, ws):
+    return (r,c) not in ws
+
+#@cache
+
+#xbs = {}
+def shift_balls_x(bs: tuple[tuple[int,int]], dr: int, dc: int) -> tuple[tuple[int,int]]:
+    #if bs in xbs:
+    #    return xbs[bs]
     bs = list(bs)
 
     changes = True
@@ -48,88 +62,33 @@ def shift_balls_n(bs: tuple[tuple[int,int]]) -> tuple[tuple[int,int]]:
         changes = False
         for i,rc in enumerate(bs):
             r,c = rc
-            rup = r-1
-            if rup >= 0:
-                # if free space above
-                if (rup,c) not in bs and (rup,c) not in ws:
-                    # move ball up
-                    bs[i] = (rup,c)
-                    changes = True
-    bs = tuple(sorted(bs))
-    return bs
-
-@cache
-def shift_balls_s(bs: tuple[tuple[int,int]]) -> tuple[tuple[int,int]]:
-    bs = list(bs)
-
-    changes = True
-    while changes:
-        changes = False
-        for i,rc in enumerate(bs):
-            r,c = rc
-            rn = r+1
-            if rn < R:
-                # if free space above
-                if (rn,c) not in bs and (rn,c) not in ws:
-                    # move ball up
-                    bs[i] = (rn,c)
-                    changes = True
-    bs = tuple(sorted(bs))
-    return bs
-
-@cache
-def shift_balls_w(bs: tuple[tuple[int,int]]) -> tuple[tuple[int,int]]:
-    bs = list(bs)
-
-    changes = True
-    while changes:
-        changes = False
-        for i,rc in enumerate(bs):
-            r,c = rc
-            cn = c-1
-            if cn >= 0:
-                # if free space above
-                if (r,cn) not in bs and (r,cn) not in ws:
-                    # move ball west
-                    bs[i] = (r,cn)
-                    changes = True
-    bs = tuple(sorted(bs))
-    return bs
-
-@cache
-def shift_balls_e(bs: tuple[tuple[int,int]]) -> tuple[tuple[int,int]]:
-    bs = list(bs)
-
-    changes = True
-    while changes:
-        changes = False
-        for i,rc in enumerate(bs):
-            r,c = rc
-            cn = c+1
-            if cn < C:
-                # if free space above
-                if (r,cn) not in bs and (r,cn) not in ws:
-                    # move ball west
-                    bs[i] = (r,cn)
+            rn = r+dr
+            cn = c+dc
+            if 0 <= rn < R and 0 <= cn < C:
+                is_free_from_bs = is_free_of_bs(rn,cn, bs)
+                is_free_from_ws = is_free_of_ws(rn,cn, ws)
+                is_free = is_free_from_ws and is_free_from_bs
+                if is_free:
+                    bs[i] = (rn,cn)
                     changes = True
 
     bs = tuple(sorted(bs))
+    #xbs[bs] = bs
     return bs
 
-
-@cache
+#@cache
 def cycle_1(bs: tuple[tuple[int,int]]) -> tuple[tuple[int,int]]:
 
-    bs = shift_balls_n(bs)
-    bs = shift_balls_w(bs)
-    bs = shift_balls_s(bs)
-    bs = shift_balls_e(bs)
+    bs = shift_balls_x(bs, -1,  0) # N
+    bs = shift_balls_x(bs,  0, -1) # W
+    bs = shift_balls_x(bs,  1,  0) # S
+    bs = shift_balls_x(bs,  0,  1) # E
 
     return bs
 
 def part_1(bs):
 
-    bs = shift_balls_n(bs)
+    bs = shift_balls_x(bs, -1, 0)
     
     brs = [r for r,_ in bs]
     load = get_ball_load(brs)
@@ -154,18 +113,30 @@ def print_platform(bs: tuple[tuple[int,int]] ) -> None:
 #print_platform(bs)
 #print(f"--------------------------")
 
-N = 1000000000
+print(f"NR = {R}")
+print(f"NC = {C}")
+
+#N = 1000000000
+#N = 3
+N = 200
 TEN_MILS = 0
 for i in range(N):
     #print(f"After {i+1} cycles:")
-    if i % 1e7 == 0:
-        TEN_MILS += 1
-        print(TEN_MILS)
+    #print(".",end="")
+    #if TEN_MILS > 80:
+    #    TEN_MILS = 0
+    #    print()
+    #if i % 1e7 == 0:
+    #    TEN_MILS += 1
+    #    print(TEN_MILS)
     bs = cycle_1(bs)
+    brs = [r for r,_ in bs]
+    load = get_ball_load(brs)
+    print(f"{i+1:2d} load: {load}")
     #print_platform(bs)
+    TEN_MILS += 1
 
-brs = [r for r,_ in bs]
-load = get_ball_load(brs)
-print(f"load: {load}")
-#
 
+
+"""
+"""
