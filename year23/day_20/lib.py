@@ -14,7 +14,6 @@ class Module:
         return f"Module('{self.name}',{self.inputs},{self.outputs})"
     def get_state_list(self) -> list[int]:
         return []
-
     def handle_pulse(self, pulse, fm):
         return []
     def get_type(self):
@@ -123,8 +122,6 @@ def get_modules(ms: list[str]) -> dict[str, Module]:
         if "output" in m:
             add_output = True
 
-    #print(f"add_output?: {add_output}")
-
     # module dict of dict_name -> outputs
     mod_dict_outputs = {}
     mod_dict_inputs = {}
@@ -185,7 +182,7 @@ def add_pulses(pulse_q: Queue, new_pulses: list[tuple[int,str]])->Queue:
         pulse_q.put(p)
     return pulse_q
 
-def get_pulses(ms: dict[Module]) -> tuple[int,int]:
+def get_pulses(bpress: int, ms: dict[Module]) -> tuple[int,int]:
     pq = Queue()
     
     b = ms["button"]
@@ -194,11 +191,12 @@ def get_pulses(ms: dict[Module]) -> tuple[int,int]:
     
     lo_per_press = 0
     hi_per_press = 0
+    x = 0
     while not pq.empty():
         pulse, to, fm = pq.get()
-        #if pulse == 0 and to == "output":
-        #    print(f"{fm:11s} |{pulse}| -> {to}")
-        #    assert False
+        #print(f"{fm:11s} |{pulse}| -> {to}")
+        if pulse == 0 and to in ["mr", "kv", "rz", "jg"] :
+            x = bpress
         if pulse == 0:
             lo_per_press += 1
         else:
@@ -207,6 +205,4 @@ def get_pulses(ms: dict[Module]) -> tuple[int,int]:
         nps = ms[to].handle_pulse(pulse, fm)
         pq = add_pulses(pq, nps)
 
-    return (ms, lo_per_press, hi_per_press)
-    
-    
+    return (x, lo_per_press, hi_per_press)
