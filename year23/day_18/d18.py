@@ -1,34 +1,24 @@
 from lib import *
 
+dirs = {"U" : (-1, 0),"D" : (1, 0),"L" : (0, -1),"R" : (0, 1)}
             
+b = 0            
     
-fname = "ex.txt"
-#fname = "in.txt"
+#fname = "ex.txt"
+fname = "in.txt"
 
-digs = get_input(fname)
+points = [(0,0)]
 
-#ds,ns = parse_digs(digs)
+for line in open(fname):
+    _, _, x = line.split()
+    x = x[2:-1]
+    dr, dc = dirs["RDLU"[int(x[-1])]]
+    n = int(x[:-1], 16)
+    b += n
+    r,c = points[-1]
+    points.append((r+dr*n, c+dc*n))
 
-ds,ns = parse_digs_p2(digs)
 
-for d,n in zip(ds,ns):
-    print(f"{d} -> {n}")
-
-#ps = get_ps(ds,ns)
-
-#ps = shift_ps(ps)
-
-#print_ps(ps)
-
-#ips = get_inside_ps(ps)
-
-#nperim = len(ps)
-#nfill = len(ips)
-#ntot = nfill + nperim
-
-#print(f"nperim: {nperim}")
-#print(f"nfill : {nfill}")
-#print(f"ntotal: {ntot}")
-
-#print(ps)
-#print(ips)
+A = abs(sum(points[i][0] * (points[i-1][-1] - points[(i+1)% len(points)][1]) for i in range(len(points)))) // 2
+i = A - b // 2 + 1
+print(i+b)
