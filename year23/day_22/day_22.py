@@ -9,7 +9,6 @@ vmap,XMAX,YMAX,ZMAX = get_voxels(lines)
 CUBE = mk_cube(vmap, XMAX, YMAX, ZMAX)
 
 compress_chunks(vmap, CUBE)
-print()
 
 get_num_removables(vmap)
 

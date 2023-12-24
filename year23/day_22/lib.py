@@ -8,8 +8,7 @@ def get_lines(fname):
     return lines
 
 def mk_voxels(bx,by,bz,H,W,D):
-    vs = []
-    #print(f"H,W,D = {H},{W},{D}")
+    
     if H == 1 and D == 1: # extrude in x
         return [(bi,by,bz) for bi in range(bx,bx+W)]
     elif H == 1 and W ==1: # extrude in y
@@ -17,12 +16,6 @@ def mk_voxels(bx,by,bz,H,W,D):
     else: # extrude in z
         return [(bx,by,bk) for bk in range(bz,bz+H)]
 
-    #for i in range(bx, bx+W):
-    #    for j in range(by, by+D):
-    #        for k in range(bz, bz+H):
-    #            val = (i,j,k)
-    #            vs.append(val)
-    #return vs
 
 def get_voxels(lines):
     vmap = {}
@@ -31,7 +24,6 @@ def get_voxels(lines):
     ZMAX = 1
 
     for i, line in enumerate(lines):
-        vs = []
 
         b,e = line.split("~")
         bx,by,bz = b.split(",")
@@ -94,12 +86,6 @@ def find_supportees(i_name, i_vd, vmap):
 
     return tuple(sorted(list(supportees)))
 
-def is_ground_supported(i_vs):
-    for ix,iy,iz in i_vs:
-        if iz == 1:
-            return True
-    return False
-
 
 def find_supporters(i_name, i_vd, vmap):
 
@@ -111,36 +97,28 @@ def find_supporters(i_name, i_vd, vmap):
     if bz == 1:
         supporters.add("gnd")
 
-    ivs = mk_voxels(bx,by,bz-1,1,W,D)
-    MAX_H = 9
-    touchable_z_lo = bz - MAX_H
-    touchable_z_hi = bz + 1
-    tzrange = range(touchable_z_lo, touchable_z_hi)
+    z_chk = bz-1
+    ivs = mk_voxels(bx,by,z_chk,1,W,D)
 
-    for z in tzrange:
-        for k,v in vmap.items():
-            if k == i_name:
-                continue
-            oz,ox,oy,oH,oW,oD = v
-            ovs = mk_voxels(ox,oy,oz,oH,oW,oD)
-            for ovi in ovs:
+    for k,v in vmap.items():
+        if k == i_name:
+            continue
+        oz,ox,oy,oH,oW,oD = v
+        ozmax = oz+oH-1
+        if ozmax != z_chk:
+            continue
+        ovs = mk_voxels(ox,oy,ozmax,1,oW,oD)
+        FOUND = False
+        for ovi in ovs:
+            if not FOUND:
                 for ivi in ivs:
                     if ovi == ivi:
                         supporters.add(k)
-
-    #supporters = sorted(list(supporters))
+                        FOUND = True
+                        break
 
     return supporters
 
-def get_floaters(vmap):
-    floaters = []
-    for chunk_name,chunk_vals in vmap.items():
-        #print(f"{c}: {v}")
-        sers = find_supporters(chunk_name,chunk_vals, vmap)
-        if len(sers) == 0:
-            floaters.append(chunk_name)
-        print(f"{chunk_name}:  sers: {sers}")
-    return floaters
 
 def enqueue_floaters(flist: list[tuple[int,int,int]], Q: Queue):
     for f in flist:
@@ -160,12 +138,9 @@ def mv_chunk_dn(chunk_name, vmap, CUBE):
     for ivx,ivy,ivz in ivs:
         CUBE[ivz,ivx,ivy] = 0
         CUBE[ivz-1,ivx,ivy] = 1
-    #for ivx,ivy,ivz in ivs:
 
 
 def push_down_floaters(floaters, vmap, CUBE):
-    
-    #print(f"floaters = {floaters}")
     
     Q = Queue()
     Q = enqueue_floaters(floaters,Q)
@@ -175,20 +150,12 @@ def push_down_floaters(floaters, vmap, CUBE):
     
         mv_chunk_dn(chunk_name, vmap, CUBE)
     
-#def filter_non_unique(lst):
-#    return [i for i,cnt in Counter(lst).items() if cnt == 1]
 
 def compress_chunks(vmap, CUBE):
 
     floaters = get_cube_floaters(vmap, CUBE)
     
-    i = 0
     while len(floaters) > 0:
-        i += 1
-        print(f".",end="")
-        if i == 80:
-            print()
-            i = 0
         push_down_floaters(floaters, vmap, CUBE)
         floaters = get_cube_floaters(vmap, CUBE)
 
