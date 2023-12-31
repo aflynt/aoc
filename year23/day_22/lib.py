@@ -1,6 +1,5 @@
 from queue import Queue
-from collections import Counter, defaultdict
-import sympy as sympy
+from collections import defaultdict
 import numpy as np
 
 def get_lines(fname):
@@ -154,10 +153,13 @@ def push_down_floaters(floaters, vmap, CUBE):
 def compress_chunks(vmap, CUBE):
 
     floaters = get_cube_floaters(vmap, CUBE)
+    pushed = floaters
     
     while len(floaters) > 0:
         push_down_floaters(floaters, vmap, CUBE)
         floaters = get_cube_floaters(vmap, CUBE)
+        pushed |= floaters
+    return len(pushed)
 
 
 def mk_cube(vmap, XMAX, YMAX, ZMAX):
@@ -214,3 +216,20 @@ def get_num_removables(vmap):
     print(f"N Chunks: {NT}")
     print(f"N_uniqus: {NKEEP}")
     print(f"N rm    : {NRM}")
+
+def rm_chunk(xid: int, vmap: dict[int,tuple[int,int,int,int,int,int]], CUBE):
+
+    # make copies
+    vmapcp = vmap.copy()
+    CUBECP = np.copy(CUBE)
+
+    # remove from vmap
+    del vmapcp[xid]
+
+    # remove from CUBE
+    bz,bx,by,H,W,D = vmap[xid]
+    ivs = mk_voxels(bx,by,bz,H,W,D)
+    for ivx,ivy,ivz in ivs:
+        CUBECP[ivz,ivx,ivy] = 0
+
+    return vmapcp, CUBECP

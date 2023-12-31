@@ -10,5 +10,14 @@ CUBE = mk_cube(vmap, XMAX, YMAX, ZMAX)
 
 compress_chunks(vmap, CUBE)
 
-get_num_removables(vmap)
+res = 0
+for XID in vmap.keys():
+    vmapcp,CUBECP = rm_chunk(XID, vmap, CUBE)
+    
+    nmv = compress_chunks(vmapcp, CUBECP)
+    res += nmv
+    print(f"--- RM: {XID} moves: {nmv} -> res: {res} -------")
+
+print(f"final sum: {res}")
+#get_num_removables(vmap)
 
