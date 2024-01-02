@@ -1,97 +1,101 @@
+from lib import *
 from queue import Queue
-
-class Grid:
-    def __init__(self, G):
-        self.G = G
-        self.R = len(G)
-        self.C = len(G[0])
-        self.rocks = set() 
-        for i in range(self.R):
-            for j in range(self.C):
-                if self.G[i][j] == "#":
-                    self.rocks.add((i,j))
-    def at(self,i,j):
-        return self.G[i][j]
-    
-    def print_grid(self):
-        cchars = "".join([f"{c}" for c in range(self.C)])
-        
-        print(f"  |{cchars}")
-        for i in range(self.R):
-            print(f"{i:2d}|", end = "")
-            for j in range(self.C):
-                char = self.at(i,j)
-                if char == ".":
-                    char = "_"
-                print(char, end="")
-            print("|")
-        print(f"  |{cchars}")
-    def print_elf_grid(self, elf_locs):
-        cchars = "".join([f"{c}" for c in range(self.C)])
-        
-        print(f"  |{cchars}")
-        for i in range(self.R):
-            print(f"{i:2d}|", end = "")
-            for j in range(self.C):
-                char = self.at(i,j)
-                if (i,j) in elf_locs:
-                    char = "O"
-                print(char, end="")
-            print("|")
-        print(f"  |{cchars}")
-
-        
-
-class Elf:
-    def __init__(self, pos):
-        self.pos = pos
-    def find_plots(self, G:Grid):
-        plots = set()
-        r,c = self.pos
-        mvs = [(r+1,c), (r-1,c),(r,c+1),(r,c-1)]
-        for rr,cc in mvs:
-            if 0 <= rr < G.R and 0 <= cc < G.C and not (rr,cc) in G.rocks:
-                plots.add((rr,cc))
-        #print(f"plots: {plots}")
-        return plots
-
-def get_input(fname):
-    lines = open(fname, "r").read().strip("\n")
-    return lines.split("\n")
-
-def get_grid(lines):
-    
-    G = []
-    for i,row in enumerate(lines):
-        rowvals = []
-        for j,char in enumerate(row):
-            rowvals.append(char)
-        G.append(rowvals)
-    return G
-
-def get_start(G: Grid):
-    for i in range(G.R):
-        for j in range(G.C):
-            if G.at(i,j) == "S":
-                return (i,j)
-    return (-1,-1)
-        
+from functools import cache
 
 ################################################
 
-fname = ["in.txt","ex.txt"][0]
+fname = ["in.txt","ex.txt"][-1]
 lines = get_input(fname)
 G = Grid(get_grid(lines))
-plts_nxt = set([get_start(G)])
+sr, sc = get_start(G)
+#           tile_r, tile_c, start_r, start_c
+v0 = (0,0,sr,sc)
+plts_nxt = set()
+plts_nxt.add(v0)
+
+###############################################
+    
+
+#def get_plots(r:int , c:int, G:Grid):
+
+def get_plots(r:int , c:int):
+    plots = set()
+    deltas = [(1, 0), (-1, 0), (0, 1), (0,-1)]
+    for dr,dc in deltas:
+        if G.at((r+dr) % G.R, (c+dc) % G.C) != "#":
+            tr, tc = get_rc_tiles(r+dr,c+dc, G.R, G.C)
+            plots.add((tr, tc, (r+dr), (c+dc)))
+    return plots
+    
+def shift_far_pts(itr, itc, far_plts, R, C):
+
+    plts = set()
+    #plts = []
+    for ftr, ftc, fr, fc in far_plts:
+        tr = itr + ftr
+        tc = itc + ftc
+        plts.add((tr,tc, fr+itr*R,fc+itc*C))
+        #plts.append((tr,tc, fr+itr*R,fc+itc*C))
+    #plts = sorted(plts)
+    return plts
 
 
-NMAX = 64
-for i in range(NMAX):
+far_plt_dict = {}
+
+def add_reachable_plots(frfcs):
+
+    for fr, fc in frfcs:
+        if (fr,fc) not in far_plt_dict:
+            far_plt_dict[(fr,fc)] = get_plots(fr, fc) # check its reachable plots
+
+
+NMAX = [6, 10, 50, 100, 500, 1000, 5000]
+#NMAX = [6, 10, 50, 100]
+for i in range(max(NMAX)):
     plts_now = plts_nxt
     plts_nxt = set()
-    
-    for plt in plts_now:
-        plts_nxt |= Elf(plt).find_plots(G) # check its reachable plots
 
-    print(f"step: {i+1:2d} n_plots: {len(plts_nxt)}")
+    frfcs = set()
+    for plt in plts_now:
+        _, _, r, c = plt
+        frfcs.add((r%G.R,c%G.C))
+    
+    frfc_new = {frfc for frfc in frfcs if frfc not in far_plt_dict}
+
+    
+    add_reachable_plots(frfcs)
+    #for fr, fc in frfcs:
+    #    add_reachable_plots
+    #    far_plts = get_plots(fr, fc) # check its reachable plots
+    #    far_plt_dict[(fr,fc)] = far_plts
+
+    for plt in plts_now:
+        # refind my results
+        tr, tc, r, c = plt
+
+        fr = r % G.R
+        fc = c % G.C
+        far_plts = far_plt_dict[(fr,fc)]
+        far_plts = shift_far_pts(tr,tc, far_plts, G.R, G.C)
+        plts_nxt |= far_plts
+    
+    #for plt in plts_now:
+    #    tr, tc, r, c = plt
+
+    #    fr = r % G.R
+    #    fc = c % G.C
+    #    far_plts = get_plots(fr, fc) # check its reachable plots
+    #    far_plts = shift_far_pts(tr,tc, far_plts, G.R, G.C)
+
+    #    #near_plts = get_plots(r, c, G) # check its reachable plots
+    #    #near_plts_view = sorted(list(near_plts))
+    #    #assert far_plts == near_plts_view
+    #    #print(f"faar_plts = {far_plts}")
+    #    #print(f"near_plts = {near_plts_view}")
+    #    #plts_nxt |= near_plts
+    #    plts_nxt |= far_plts
+
+    if i+1 in NMAX:
+        print(f"step: {i+1:2d} n_plots: {len(plts_nxt)}")
+    #x = input()
     #G.print_elf_grid(elf_locs)
