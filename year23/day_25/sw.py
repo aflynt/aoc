@@ -20,40 +20,22 @@ for k,v in connections.items():
         G.add_edge(k,nbr, weight=1)
         G.add_edge(nbr,k, weight=1)
 
-for n in G:
-    nbr = G[n]
-    print(f"{n} -> {nbr}")
-
-#V = [1,2,3,4,5,6,7,8,]
-#G.add_nodes_from(V)
-
-#ws = [
-#    (1,2, {'weight':2}),
-#    (1,5, {'weight':3}),
-#    (2,3, {'weight':3}),
-#    (2,5, {'weight':2}),
-#    (2,6, {'weight':2}),
-#    (3,4, {'weight':4}),
-#    (3,7, {'weight':2}),
-#    (4,7, {'weight':2}),
-#    (4,8, {'weight':2}),
-#    (5,6, {'weight':3}),
-#    (6,7, {'weight':1}),
-#    (7,8, {'weight':3}),
-#]
-#G.add_edges_from(ws)
-
-#ax = plt.figure()
-#ax = plt.subplot(111)
-#nx.draw(G, with_labels=True, font_weight='bold')
-#plt.show()
 
 
-start_node = list(connections.keys())[0]
-print(f"starting_with : {start_node}")
+NR = 727
+nnodes = G.number_of_nodes()
+NL = nnodes - NR
 
-cop = min_cut(G, start_node)
+ans = NR * NL
+print(f"N_NODES = {nnodes}")
+print(f"NR  = {NR}")
+print(f"NL  = {NL}")
+print(f"ans = {ans}")
 
-cop = sorted(cop)[0:3]
 
-print(f"mincut: {cop}")
+#start_node = list(connections.keys())[0]
+#print(f"starting_with : {start_node}")
+
+#cop = min_cut(G, start_node)
+#cop = sorted(cop)[0:3]
+#print(f"mincut: {cop}")

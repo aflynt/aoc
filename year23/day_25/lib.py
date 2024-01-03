@@ -1,23 +1,17 @@
 import networkx as nx
-import matplotlib.pyplot as plt
-import pydot
 from collections import defaultdict
 
 def get_tightest_connected_vertex(G: nx.Graph, A:list[int]) -> int:
-    V = set(G)
-    V = { vi for vi in V if vi not in A}
+    A = set(A)
+    V = set(G) - A
 
     z = list(V)[0]
     maxwt = 0
     for y in V:
-        wtsum = 0
-        for Ai in A:
-            w = 0
-            try:
-                w =  G[Ai][y]["weight"]
-                wtsum += w
-            except:
-                wtsum += 0
+
+        good_es = [n for n in G[y] if n in A]
+        wtsum = sum([G.get_edge_data(gn,y)['weight'] for gn in good_es])
+            
         if wtsum > maxwt:
             z = y
             maxwt = wtsum
@@ -28,14 +22,14 @@ def min_cut_phase(G: nx.Graph,a:int, cops:list[int]):
     V = set(G)
     A = [a]
     while len(A) < len(V):
+        #print(f"{len(A)/lv:10.3f}\r",end="")
         z = get_tightest_connected_vertex(G,A)
         A.append(z)
     
     s = A[-2]
     t = A[-1]
 
-    print(f"found s: {s}")
-    print(f"found t: {t}")
+    #print(f"found s-t: {s} - {t}")
 
     # store cut of phase
     cut_wt = 0
@@ -77,7 +71,9 @@ def min_cut_phase(G: nx.Graph,a:int, cops:list[int]):
 
 def min_cut(G: nx.Graph, a: int):
     cop = []
+    i = 0
     while len(set(G)) > 1:
         cop,G = min_cut_phase(G, a, cop)
-        #print(f"cop = {cop}")
+        print(i)
+        i += 1
     return cop
