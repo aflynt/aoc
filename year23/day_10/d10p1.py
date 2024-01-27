@@ -2,7 +2,7 @@
 def get_input(fname):
     with open(fname) as f:
         lines = f.readlines()
-    
+
     lines = [line.strip('\n') for line in lines]
 
     G = []
@@ -65,7 +65,7 @@ def get_valid_neighbors(si,sj):
     tw = Tile(G, si  ,sj-1)
     nbrs = {'N': tn, 'S': ts, 'E': te, 'W': tw}
     ti = Tile(G, si, sj)
-    
+
     valid_nbrs = []
     for k,v in nbrs.items():
         if k == 'N': isvalid = v.connects_to_s() and ti.connects_to_n()
@@ -95,7 +95,10 @@ G  = get_input(fname)
 (si,sj) = find_s(G)
 start_tile = Tile(G, si, sj)
 
+
 vns = get_valid_neighbors(si,sj)
+#for vn in vns:
+#    print(vn)
 
 steps = 1
 
@@ -110,6 +113,7 @@ while not same_same:
     nt0, lt0 = get_next_tile(nt0,lt0)
     nt1, lt1 = get_next_tile(nt1,lt1)
     steps += 1
-    print(f"from {lt0} -> {nt0}, {lt1} -> {nt1}, steps: {steps}")
+    #print(f"from {lt0} -> {nt0}, {lt1} -> {nt1}, steps: {steps}")
     same_same = nt0.get_rc() == nt1.get_rc()
+print(steps)
 
