@@ -1,31 +1,27 @@
 import re
 from typing import List
+from itertools import accumulate
+
+def print_nums(mem):
+    # print a list of numbers 
+    for i in range(0,80):
+        if i%10 == 0:
+            pstr = "_"
+        else:
+            pstr = f"{i%10:d}"
+        print(pstr, end="")
+    print()
+
+def get_input(fname):
+    lines = open(fname, "r").read().strip("\n").split("\n")
+    return lines
 
 def pop_front(vec:List):
     head = vec[0]
     newvec  = vec[1:]
     return head, newvec
 
-
-def get_input(fname):
-    lines = open(fname, "r").read().strip("\n").split("\n")
-    return lines
-
-#mem = get_input('ex.txt')
-mem = get_input('ex2.txt')
-#mem = get_input('in.txt')
-mem = "".join(mem)
-mem = "do()"+mem
-for i in range(0,67):
-    if i%10 == 0:
-        pstr = "_"
-    else:
-        pstr = f"{i%10:d}"
-    print(pstr, end="")
-print()
-print(mem)
-
-def p1():
+def p1(mem, debug=False):
     muls = re.findall(r'mul\(\d\d?\d?,\d\d?\d?\)', mem)
     
     ans = 0
@@ -37,85 +33,35 @@ def p1():
             lnum = int(l)
             rnum = int(r)
             ires = lnum*rnum
-            print(f"{mul} -> {lnum}*{rnum} = {ires}")
+            if debug:
+                print(f"{mul} -> {lnum}*{rnum} = {ires}")
             ans += ires
         except:
-            print(f"fail for {l},{r}")
+            if debug:
+                print(f"fail for {l},{r}")
 
     print(ans)
 
-def p2():
-    #in_ms = re.findall(r'do\(\)', mem)
+def p2(mem):
     i_ms = re.finditer(r'do\(\)', mem)
     o_ms = re.finditer(r'don\'t\(\)', mem)
-
-    i_starts  = [m.start() for m in i_ms]
+    
+    i_starts = [m.start() for m in i_ms]
     o_starts = [m.start() for m in o_ms]
-    print(f" i starts = {i_starts}")
-    print(f" o starts = {o_starts}")
-
-
-
-
-    #ins = re.findall(r'.*do.*mul\(\d\d?\d?,\d\d?\d?\)', mem)
-    #muls = re.findall(r'mul\(\d\d?\d?,\d\d?\d?\)', mem)
     
-    #ans = 0
-    #for mul in muls:
-        #l,r = mul.split(",")
-        #l = l.replace("mul(","")
-        #r = r.replace(")","")
-        #try:
-        #    lnum = int(l)
-        #    rnum = int(r)
-        #    ires = lnum*rnum
-        #    print(f"{mul} -> {lnum}*{rnum} = {ires}")
-        #    ans += ires
-        #except:
-        #    print(f"fail for {l},{r}")
-
-    #print(ans)
-
-
-#p2()
-
-gs = [0, 10, 20, 40]
-bs = [5,  7, 30, 50]
-
-head, gs = pop_front(gs)
-tail, bs = pop_front(bs)
-res = [(head, tail)]
-is_good_state = False
-
-
-while len(bs) > 0:
-
-    if not is_good_state:
-        # in bad state -> keep eating bad points
+    gmask = [ 1 if i in i_starts else 0 for i in range(len(mem))]
+    bmask = [-1 if i in o_starts else 0 for i in range(len(mem))]
+    bgmask = [g + b for b,g in zip(bmask,gmask)]
+    mask_ok = list(accumulate(bgmask, lambda x,y: min(max(x+y,0),1)))
     
-        head,gs = pop_front(gs)
-        tail,bs = pop_front(bs)
+    on_chars = [c for c,m in zip(mem,mask_ok) if m ==1]
+    new_mem = ''.join(on_chars)
     
-        while tail < head:
-            tail,bs = pop_front(bs)
-        is_good_state = True
+    p1(new_mem)
 
-        res.append((head, tail))
-    
-    else:
-        # in good_state -> keep eating good points
-        head,gs = pop_front(gs)
-        tail,bs = pop_front(bs)
-        next_head = gs[0]
-        while next_head < tail:
-            head,gs = pop_front(gs)
-            next_head = gs[0]
-        is_good_state = False
-
-        res.append((head, tail))
-
-    print(f"sg: {is_good_state} bs: {bs} gs: {gs} head: {head} tail: {tail} res: {res}")
-
-
-
-
+#mem = get_input('ex.txt')
+mem = get_input('in.txt')
+mem = "".join(mem)
+mem = "do()"+mem
+p1(mem)
+p2(mem)
