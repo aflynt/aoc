@@ -19,16 +19,7 @@ class Dir(Enum):
     def __lt__(self, o):
         return self.value < o.value
 
-dirs = [
-    Dir.E,
-    Dir.W,
-    Dir.N,
-    Dir.S,
-    Dir.SE,
-    Dir.SW,
-    Dir.NW,
-    Dir.NE,
-]
+dirs = [Dir.E,Dir.W,Dir.N,Dir.S,Dir.SE,Dir.SW,Dir.NW,Dir.NE,]
 
 class Node:
     def __init__(self, r, c, v):
@@ -45,50 +36,6 @@ class Node:
     def __str__(self) -> str:
         return f"({self.r:3d},{self.c:3d}, {self.v})"
 
-def get_node_nbrs(G, cn: Node) -> list[Node]:
-    R   = len(G)
-    C   = len(G[0])
-    r = cn.r
-    c = cn.c
-    v = cn.v
-    nbrs = []
-    # look east
-
-
-    # try to add N
-    if 0 <= r-1 < R and 0 <= c   < C : 
-        nbrs.append(Node(r-1, c  , G[r-1][c])) 
-
-    # try to add south
-    if 0 <= r+1 < R and 0 <= c   < C :
-        nbrs.append(Node(r+1, c  , G[r+1][c])) 
-
-    # try to add east
-    if 0 <= r   < R and 0 <= c+1 < C :
-        nbrs.append(Node(r  , c+1, G[r][c+1])) 
-
-    # try to add west
-    if 0 <= r   < R and 0 <= c-1 < C :
-        nbrs.append(Node( r, c-1, G[r][c-1])) 
-
-    # try to add NE
-    if 0 <= r-1   < R and 0 <= c+1 < C :
-        nbrs.append(Node( r-1, c+1, G[r-1][c+1])) 
-
-    # NW = - -
-    if 0 <= r-1   < R and 0 <= c-1 < C :
-        nbrs.append(Node( r-1, c-1, G[r-1][c-1])) 
-
-    # SW = + -
-    if 0 <= r+1   < R and 0 <= c-1 < C :
-        nbrs.append(Node( r+1, c-1, G[r+1][c-1])) 
-
-    # SE = + +
-    if 0 <= r+1   < R and 0 <= c+1 < C :
-        nbrs.append(Node( r+1, c+1, G[r+1][c+1])) 
-
-    return nbrs
-
 def get_nbrs_matching_char(G, cn: Node, c: str):
 
     mnbrs = []
@@ -98,65 +45,42 @@ def get_nbrs_matching_char(G, cn: Node, c: str):
             mnbrs.append((d,nbr))
     return mnbrs
 
-
-def get_nbr(G, cn: Node, dir: Dir):
+def get_nbr(G, cn: Node, dir: Dir, bad_char="*"):
 
     R   = len(G)
     C   = len(G[0])
     r = cn.r
     c = cn.c
+    n = Node(-1, -1, bad_char)
 
     match dir:
         case Dir.N:
-            # try to add N
             if 0 <= r-1 < R and 0 <= c   < C : 
-                return Node(r-1, c  , G[r-1][c])
+                n = Node(r-1, c  , G[r-1][c])
         case Dir.S:
-            # try to add south
             if 0 <= r+1 < R and 0 <= c   < C :
-                return Node(r+1, c  , G[r+1][c])
+                n = Node(r+1, c  , G[r+1][c])
         case Dir.E:
-            # try to add east
             if 0 <= r   < R and 0 <= c+1 < C :
-                return Node(r  , c+1, G[r][c+1])
+                n = Node(r  , c+1, G[r][c+1])
         case Dir.W:
-            # try to add west
             if 0 <= r   < R and 0 <= c-1 < C :
-                return Node( r, c-1, G[r][c-1])
+                n = Node( r, c-1, G[r][c-1])
         case Dir.NE:
-            # try to add NE
             if 0 <= r-1   < R and 0 <= c+1 < C :
-                return Node( r-1, c+1, G[r-1][c+1])
+                n = Node( r-1, c+1, G[r-1][c+1])
         case Dir.NW:
-            # NW = - -
             if 0 <= r-1   < R and 0 <= c-1 < C :
-                return Node( r-1, c-1, G[r-1][c-1])
+                n = Node( r-1, c-1, G[r-1][c-1])
         case Dir.SW:
-            # SW = + -
             if 0 <= r+1   < R and 0 <= c-1 < C :
-                return Node( r+1, c-1, G[r+1][c-1])
+                n = Node( r+1, c-1, G[r+1][c-1])
         case Dir.SE:
-            # SE = + +
             if 0 <= r+1   < R and 0 <= c+1 < C :
-                return Node( r+1, c+1, G[r+1][c+1])
+                n = Node( r+1, c+1, G[r+1][c+1])
         case _:
-            return None
-    return None
-
-
-def print_nums(mem):
-    # print a list of numbers 
-    for i in range(0,80):
-        if i%10 == 0:
-            pstr = "_"
-        else:
-            pstr = f"{i%10:d}"
-        print(pstr, end="")
-    print()
-
-def get_input(fname):
-    lines = open(fname, "r").read().strip("\n").split("\n")
-    return lines
+            return n
+    return n
 
 def get_grid(fname):
     with open(fname, "r") as f:
@@ -172,13 +96,6 @@ def print_grid(G):
     for r in range(R):
         nums = [str(G[r][c]) for c in range(C)]
         print("".join(nums))
-
-#fname = "ex.txt"
-fname = "in.txt"
-
-G = get_grid(fname)
-
-
 
 def p1(G):
     ans = 0
@@ -202,11 +119,44 @@ def p1(G):
                        snbr = get_nbr(G, anbr, mdir)
                        if snbr and snbr.v == 'S':
                            ans += 1
-                           print(f" {ans:2d}: {n}->{mdir:2s} {mn}, {anbr}, {snbr}")
+                           #print(f" {ans:2d}: {n}->{mdir:2s} {mn}, {anbr}, {snbr}")
+    print(ans)
+
+def p2(G):
+    ans = 0
+    R = len(G)
+    C = len(G[0])
 
 
+    for r in range(R):
+        for c in range(C):
+            n = Node(r,c, G[r][c])
+            if n.v == "A":
+                NE = get_nbr(G, n, Dir.NE).v
+                NW = get_nbr(G, n, Dir.NW).v
+                SE = get_nbr(G, n, Dir.SE).v
+                SW = get_nbr(G, n, Dir.SW).v
+
+                got_x = False
+                if  NW == 'S' and NE == 'S' and SE == 'M' and SW == 'M': got_x = True
+                if  NW == 'M' and NE == 'S' and SE == 'S' and SW == 'M': got_x = True
+                if  NW == 'M' and NE == 'M' and SE == 'S' and SW == 'S': got_x = True
+                if  NW == 'S' and NE == 'M' and SE == 'M' and SW == 'S': got_x = True
+
+                if got_x:
+                    ans += 1
+                    #print(f" {ans:3d}: {n} ")
+    print(ans)
+
+
+
+#fname = "ex.txt"
+fname = "in.txt"
+
+G = get_grid(fname)
 
 
 p1(G)
+p2(G)
 
 #print_grid(G)
