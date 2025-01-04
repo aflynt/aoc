@@ -1,5 +1,6 @@
 
 from collections import deque
+import heapq
 
 
 class Grid:
@@ -42,25 +43,6 @@ class Grid:
             rstr += "\n"
         return rstr
     def get_turn_price(self, facing, to_face):
-        tpd = {
-            # facing, to_face
-            ("N","N"):  0*1000,
-            ("N","S"):  2*1000,
-            ("N","E"):  1*1000,
-            ("N","W"):  1*1000,
-            ("S","N"):  2*1000,
-            ("S","S"):  0*1000,
-            ("S","E"):  1*1000,
-            ("S","W"):  1*1000,
-            ("E","N"):  1*1000,
-            ("E","S"):  1*1000,
-            ("E","E"):  0*1000,
-            ("E","W"):  2*1000,
-            ("W","N"):  1*1000,
-            ("W","S"):  1*1000,
-            ("W","E"):  2*1000,
-            ("W","W"):  0*1000,
-        }
         f_to = (facing, to_face)
         match f_to:
             case ("N","N"): return 0*1000
@@ -103,66 +85,50 @@ class Grid:
             ("W","W"):  0*1000,
         }
         tot_price = 10000000*self.R*self.C + 2
-        #tot_price = 2e9
         visited = set()
-        q = deque()
-        dps = [
-           ("E",   0),
-           ("N",1000),
-           ("S",1000),
-           ("W",2000),
-        ]
-        for dp in dps:
-            dir, price = dp
-            q.append((self.S[0], self.S[1], dir, price))
+        Q = []
+        heapq.heappush(Q, (0,self.S[0], self.S[1],"E"))
+        DIST = {}
+        best = None
 
-        i = 1
-        while q:
-            rcdp = q.popleft()
-            if rcdp not in visited:
-                visited.add(rcdp)
-                r,c,d,p = rcdp
-                if i % 100000 == 0:
-                    print(f"checking rcdp: {r:3d} {c:3d} {d} {p:10d}, lowP: {tot_price:,} lenQ: {len(q)}")
-                if  p < tot_price and (r,c) == self.E:
-                    # found a better path
-                    tot_price = p
-                else:
-                    # keep searching
-                    # add NSEW from here
-                    can_go_N = self.G[r-1][c] != "#"
-                    can_go_S = self.G[r+1][c] != "#"
-                    can_go_E = self.G[r][c+1] != "#"
-                    can_go_W = self.G[r][c-1] != "#"
-                    #can_go_N = (r-1,c) not in self.walls
-                    #can_go_S = (r+1,c) not in self.walls
-                    #can_go_E = (r,c+1) not in self.walls
-                    #can_go_W = (r,c-1) not in self.walls
-                    if can_go_N:
-                        #p_N = p + 1 + self.get_turn_price(d,"N")
-                        p_N = p + 1 + tpd[(d,"N")]
-                        new_rcdp = (r-1,c,'N',p_N)
-                        if p_N < tot_price and new_rcdp not in visited:
-                            q.append(new_rcdp)
-                    if can_go_S:
-                        #p_S = p + 1 + self.get_turn_price(d,"S")
-                        p_S = p + 1 + tpd[(d,"S")]
-                        new_rcdp = (r+1,c,'S',p_S)
-                        if p_S < tot_price and new_rcdp not in visited:
-                            q.append(new_rcdp)
-                    if can_go_E:
-                        #p_E = p + 1 + self.get_turn_price(d,"E")
-                        p_E = p + 1 + tpd[(d,"E")]
-                        new_rcdp = (r,c+1,'E',p_E)
-                        if p_E < tot_price and new_rcdp not in visited:
-                            q.append(new_rcdp)
-                    if can_go_W:
-                        #p_W = p + 1 + self.get_turn_price(d,"W")
-                        p_W = p + 1 + tpd[(d,"W")]
-                        new_rcdp = (r,c-1, 'W', p_W)
-                        if p_W < tot_price and new_rcdp not in visited:
-                            q.append(new_rcdp)
-            i += 1
+        while Q:
+            prcd = heapq.heappop(Q)
+            p,r,c,d = prcd
+            if  p < tot_price and (r,c) == self.E and best is None:
+                # found a better path
+                tot_price = p
+            if (r,c,d) not in DIST:
+                DIST[(r,c,d)] = p
+
+            if (r,c,d) not in visited:
+                visited.add((r,c,d))
+                print(f"checking rcdp: {r:3d} {c:3d} {d} {p:10d}, lowP: {tot_price:,} lenQ: {len(Q)}")
+                # keep searching
+                # add NSEW from here
+                can_go_N = self.G[r-1][c] != "#"
+                can_go_S = self.G[r+1][c] != "#"
+                can_go_E = self.G[r][c+1] != "#"
+                can_go_W = self.G[r][c-1] != "#"
+                if can_go_N:
+                    p_N = p + 1 + tpd[(d,"N")]
+                    new_prcd = (p_N,r-1,c,'N')
+                    if p_N <= tot_price:
+                        heapq.heappush(Q, new_prcd)
+                if can_go_S:
+                    p_S = p + 1 + tpd[(d,"S")]
+                    new_prcd = (p_S,r+1,c,'S')
+                    if p_S <= tot_price:
+                        heapq.heappush(Q, new_prcd)
+                if can_go_E:
+                    p_E = p + 1 + tpd[(d,"E")]
+                    new_prcd = (p_E,r,c+1,'E')
+                    if p_E <= tot_price:
+                        heapq.heappush(Q, new_prcd)
+                if can_go_W:
+                    p_W = p + 1 + tpd[(d,"W")]
+                    new_prcd = (p_W,r,c-1, 'W')
+                    if p_W <= tot_price:
+                        heapq.heappush(Q, new_prcd)
 
         return tot_price
 
